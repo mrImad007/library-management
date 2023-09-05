@@ -46,7 +46,6 @@ public class Book {
         String haha = scanner.next();
 
         try{
-
             String sql = "INSERT INTO books (`id`, `name`, `something`, `hah`) VALUES (" + id + ", '" + name + "', '" + som + "', '" + haha + "')";
             statement.executeUpdate(sql);
         } catch (SQLException e) {
@@ -65,8 +64,9 @@ public class Book {
         }catch (Exception e){
             logger.log(Level.WARNING,"delete failed");
         }
-
     }
+
+    public static void update
 
 
 }
