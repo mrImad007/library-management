@@ -8,12 +8,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Book {
-    private static ResultSet result = null;
+    private static ResultSet result;
     private static final Scanner scanner = new Scanner(System.in);
     //private static String name;
     private static final Logger logger = Logger.getLogger(Book.class.getName());
     private static final Statement statement = JDBC.main();
-    public static void main(String[] args){
+    public static void main(String[] args) throws SQLException {
 
         try{
             ResultSet books = display();
@@ -23,7 +23,9 @@ public class Book {
         }catch (Exception e){
             logger.log(Level.WARNING, "Connection with db failed");
         }
-        DeleteBook();
+        System.out.println("here is the book your looking for");
+        String imad = "imad";
+        displaySingle(imad);
     }
 
     public static ResultSet display(){
@@ -33,6 +35,14 @@ public class Book {
             logger.log(Level.WARNING, "Query failed");
         }
         return result;
+    }
+
+    public static void displaySingle(String name) throws SQLException {
+        result = statement.executeQuery("SELECT * FROM books WHERE `name` = '" + name + "'");
+        while(result.next()){
+            System.out.println(result.getInt(1)+" "+result.getString(2));
+        }
+
     }
 
     public static void InsertBook(){
@@ -66,7 +76,9 @@ public class Book {
         }
     }
 
-    public static void update
+    public static void update(){
+
+    }
 
 
 }
