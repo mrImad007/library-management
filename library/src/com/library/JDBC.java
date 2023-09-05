@@ -11,10 +11,6 @@ public class JDBC {
             Connection connection = DriverManager.getConnection(url,root,password);
             Statement statement = connection.createStatement();
             return statement;
-            /*ResultSet result = statement.executeQuery("SELECT * from Books");
-            while (result.next()){
-                System.out.println(result.getInt(1)+" "+result.getString(2)+" "+result.getString(3));
-            }*/
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
