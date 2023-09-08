@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost
--- Généré le : mar. 05 sep. 2023 à 17:26
+-- Généré le : jeu. 07 sep. 2023 à 12:33
 -- Version du serveur : 10.4.27-MariaDB
 -- Version de PHP : 8.2.0
 
@@ -33,6 +33,13 @@ CREATE TABLE `bibliothequaire` (
   `usership` varchar(200) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Déchargement des données de la table `bibliothequaire`
+--
+
+INSERT INTO `bibliothequaire` (`id`, `name`, `usership`) VALUES
+(1, 'imad eddine', 'A01');
+
 -- --------------------------------------------------------
 
 --
@@ -46,6 +53,20 @@ CREATE TABLE `book` (
   `quantity` int(200) NOT NULL,
   `status` varchar(200) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `book`
+--
+
+INSERT INTO `book` (`isbn`, `name`, `author`, `quantity`, `status`) VALUES
+(21, 'imad', 'zaoui', 22, 'disponible'),
+(22, 'zaoui', 'qsdsdv', 11, 'disponible'),
+(24, 'hamid', 'sebt', 0, 'indisponible'),
+(25, 'savoir faire', 'abdel', 22, 'disponible'),
+(26, 'savoir etre', 'hamid', 0, 'indisponible'),
+(27, 'nouveau', 'chamal', 0, 'indisponible'),
+(28, 'jh', 'qsdv', 1, 'disponible'),
+(29, 'qdfv', 'qsdbv', 0, 'indisponible');
 
 -- --------------------------------------------------------
 
@@ -86,7 +107,7 @@ CREATE TRIGGER `book_trigger` AFTER INSERT ON `emprunt` FOR EACH ROW BEGIN
   SELECT quantity INTO qtt FROM book WHERE isbn = NEW.isbn_book;
 
   IF(qtt = 0) THEN
-    UPDATE book SET status = FALSE WHERE book.isbn = NEW.isbn_book;
+    UPDATE book SET status = "indisponible" WHERE book.isbn = NEW.isbn_book;
   END IF;
 END
 $$
@@ -130,13 +151,13 @@ ALTER TABLE `emprunt`
 -- AUTO_INCREMENT pour la table `bibliothequaire`
 --
 ALTER TABLE `bibliothequaire`
-  MODIFY `id` int(5) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(5) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT pour la table `book`
 --
 ALTER TABLE `book`
-  MODIFY `isbn` int(5) NOT NULL AUTO_INCREMENT;
+  MODIFY `isbn` int(5) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT pour la table `client`
