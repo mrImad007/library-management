@@ -5,13 +5,13 @@ import com.library.connection.JDBC;
 
 import javax.swing.*;
 import java.sql.*;
-import java.util.Scanner;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Book {
     private static ResultSet result = null;
-    private static final Scanner scanner = new Scanner(System.in);
     private static final Logger logger = Logger.getLogger(Book.class.getName());
     private static final Statement statement = null;
     private static final Connection connection = JDBC.main();
@@ -28,7 +28,7 @@ public class Book {
             preparedStatement.setString(1, dispo);
 
             ResultSet resultSet = preparedStatement.executeQuery();
-            output.append("ISBN\tTitre\tAuteur\tQuantité\n");
+            output.append("ISBN\t\t\t\t\tTitre\t\t\t\t\tAuteur\t\t\tQuantité\n");
 
             while (resultSet.next()) {
                 String isbn = resultSet.getString(1);
@@ -36,9 +36,9 @@ public class Book {
                 String author = resultSet.getString(3);
                 int quantity = resultSet.getInt(4);
 
-                output.append(isbn).append("   ").append("\t");
-                output.append(name).append("   ").append("\t");
-                output.append(author).append("   ").append("\t");
+                output.append(isbn).append("   ").append("\t\t\t\t\t");
+                output.append(name).append("   ").append("\t\t\t\t\t");
+                output.append(author).append("   ").append("\t\t\t");
                 output.append(quantity).append("   ").append("\n");
             }
 
@@ -52,7 +52,6 @@ public class Book {
             throw new RuntimeException(e);
         }
     }
-
 
     public static void displayByName(String name) {
         if (name == null || name.isEmpty()) {
@@ -85,7 +84,6 @@ public class Book {
         }
     }
 
-
     public static void displayByAuthor(String author) {
         if (author == null || author.isEmpty()) {
             JOptionPane.showMessageDialog(null, "Merci d'entrer le nom de l'auteur", "Warning", JOptionPane.WARNING_MESSAGE);
@@ -98,8 +96,6 @@ public class Book {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setString(1, author);
             ResultSet result = preparedStatement.executeQuery();
-
-            StringBuilder output = new StringBuilder();
 
             while (result.next()) {
                 output.append(result.getString(1)).append(" ");
@@ -118,22 +114,18 @@ public class Book {
     }
 
 
-    public static void displayByIsbn(int isbn) {
-        try {
-            result = statement.executeQuery("SELECT * FROM book WHERE `name` = '" + isbn + "'");
-            while (result.next()) {
-                output.append(result.getString(1)).append(" ");
-                output.append(result.getString(2)).append("\n");
+    public static boolean doesBookExist(int isbn) throws SQLException {
+        String query = "SELECT COUNT(*) FROM book WHERE isbn = ? AND `status` = 'disponible'";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setInt(1, isbn);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    int bookCount = resultSet.getInt(1);
+                    return bookCount > 0;
+                }
             }
-
-            if (output.length() > 0) {
-                JOptionPane.showMessageDialog(null, output.toString(), "List des livres disponible", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(null, "Livre indisponible", "Book List", JOptionPane.INFORMATION_MESSAGE);
-            }
-        }catch (Exception e){
-            JOptionPane.showMessageDialog(null, "Merci d'enter le titre du livre", "Warning", JOptionPane.WARNING_MESSAGE);
         }
+        return false;
     }
 
     public static void InsertBook() {
@@ -144,7 +136,6 @@ public class Book {
 
             while(name == null || name.trim().isEmpty()){
                 name = JOptionPane.showInputDialog("Enter le titre du livre:");
-                System.out.println(name);
             }
 
             while(author == null || author.trim().isEmpty()){
@@ -178,11 +169,9 @@ public class Book {
 
             JOptionPane.showMessageDialog(null, "Livre ajouté avec succès", "Succès", JOptionPane.INFORMATION_MESSAGE);
         } catch (SQLException e) {
-            logger.log(Level.WARNING, "Insertion failed", e);
             JOptionPane.showMessageDialog(null, "Une erreur s'est produite lors de l'ajout du livre.", "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
-
 
     public static void DeleteBook() {
         int isbn = -1;
@@ -225,8 +214,7 @@ public class Book {
         }
     }
 
-
-    public static void UpdateBook(){
+    /*public static void UpdateBook(){
         System.out.println("Enter the isbn : ");
         int isbn = scanner.nextInt();
         System.out.println("Enter the name: ");
@@ -245,7 +233,122 @@ public class Book {
             logger.log(Level.WARNING,"failed");
             throw new RuntimeException(e);
         }
+    }*/
+
+    public static void UpdateBook() {
+        try {
+            String isbnInput = JOptionPane.showInputDialog("Enter the ISBN:");
+            int isbn;
+
+            try {
+                isbn = Integer.parseInt(isbnInput);
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "Invalid ISBN. Please enter a valid number.", "Error", JOptionPane.ERROR_MESSAGE);
+                return; // Exit the method if ISBN is invalid
+            }
+
+            String name = null;
+            String author = null;
+            int quantity = -1;
+            String status = null;
+
+            while (name == null || name.trim().isEmpty()) {
+                name = JOptionPane.showInputDialog("Enter the name:");
+            }
+
+            while (author == null || author.trim().isEmpty()) {
+                author = JOptionPane.showInputDialog("Enter the author:");
+            }
+
+            while (quantity <= 0) {
+                try {
+                    String quantityInput = JOptionPane.showInputDialog("Enter the quantity:");
+                    quantity = Integer.parseInt(quantityInput);
+
+                    if (quantity <= 0) {
+                        JOptionPane.showMessageDialog(null, "Quantity must be greater than zero.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(null, "Invalid quantity. Please enter a valid number.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+
+            while (status == null || status.trim().isEmpty()) {
+                status = JOptionPane.showInputDialog("Enter the status:");
+            }
+
+            String sql = "UPDATE book SET name = ?, author = ?, quantity = ?, status = ? WHERE isbn = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setString(1, name);
+            preparedStatement.setString(2, author);
+            preparedStatement.setInt(3, quantity);
+            preparedStatement.setString(4, status);
+            preparedStatement.setInt(5, isbn);
+
+            preparedStatement.executeUpdate();
+
+            JOptionPane.showMessageDialog(null, "Book updated successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Update failed", e);
+            JOptionPane.showMessageDialog(null, "An error occurred while updating the book.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
+    public static int Totalbooks(){
+        try {
+            int totalQuantity = 0;
+            String query = "SELECT SUM(quantity) AS total_quantity FROM book";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                totalQuantity = resultSet.getInt("total_quantity");
+            }
+            return totalQuantity;
+        }catch (Exception e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Map<String, Integer> getTotalBookCounts() {
+        try {
+            Map<String, Integer> bookCounts = new HashMap<>();
+            try {
+                String disponiblesQuery = "SELECT SUM(quantity) AS total_disponible FROM book WHERE status = 'disponible'";
+                PreparedStatement disponiblesStatement = connection.prepareStatement(disponiblesQuery);
+                ResultSet disponiblesResultSet = disponiblesStatement.executeQuery();
+
+                if (disponiblesResultSet.next()) {
+                    int disponibleCount = disponiblesResultSet.getInt("total_disponible");
+                    bookCounts.put("disponibles", disponibleCount);
+                }
+
+                String indisponibleQuery = "SELECT COUNT(*) AS total_indisponible FROM book WHERE status = 'indisponible'";
+                PreparedStatement indisponibleStatement = connection.prepareStatement(indisponibleQuery);
+                ResultSet indsponibleResultSet = indisponibleStatement.executeQuery();
+
+                if (indsponibleResultSet.next()) {
+                    int indiponibleCount = indsponibleResultSet.getInt("total_indisponible");
+                    bookCounts.put("indisponibles", indiponibleCount);
+                }
+
+                String perdusQuery = "SELECT COUNT(*) AS total_perdu FROM book WHERE status = 'perdu'";
+                PreparedStatement perdusStatement = connection.prepareStatement(perdusQuery);
+                ResultSet perdusResultSet = perdusStatement.executeQuery();
+
+                if (perdusResultSet.next()) {
+                    int perdusCount = perdusResultSet.getInt("total_perdu");
+                    bookCounts.put("perdus", perdusCount);
+                }
+
+                return bookCounts;
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }catch (Exception e){
+            throw new RuntimeException(e);
+        }
+    }
 
 }

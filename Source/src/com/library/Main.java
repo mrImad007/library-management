@@ -1,7 +1,14 @@
 package com.library;
 
 import javax.swing.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
+
+import static com.library.Book.getTotalBookCounts;
 
 public class Main {
     public static void main(String[] args) {
@@ -9,7 +16,7 @@ public class Main {
             String menu = JOptionPane.showInputDialog("""
                     Bienvenue dans votre application\s
                     ******* Menu *******\s
-                    1 : Afficher la liste des livres disponibles
+                    1 : Afficher la liste des livres
                     2 : Gestion des livres\s
                     3 : Trouver un livre \s
                     4 : Emprunter un livre\s
@@ -26,7 +33,25 @@ public class Main {
                         return;
                     }
                     case 1: {
-                        Book.display();
+                        String showMenu = JOptionPane.showInputDialog("""
+                                Bienvenue dans votre application\s
+                                ******* Menu *******\s
+                                1 : Livres disponibles
+                                2 : Livres empruntés\s
+                                3 : Livres perdus \s""");
+                        int choiceShowMenu = Integer.parseInt(showMenu);
+
+                        switch (choiceShowMenu){
+                            case 1 : {
+                                Book.display();
+                                break;
+                            }
+                            case 2 : {
+                                Emprunt.borrowedBooks();
+                                break;
+                            }
+                        }
+
                         break;
                     }
                     case 2: {
@@ -49,13 +74,8 @@ public class Main {
                                     break;
                                 }
                                 case 1: {
-                                    try {
                                         Book.InsertBook();
-                                        JOptionPane.showMessageDialog(null, "Nouveau livre ajouté à la bibliotheque :)");
                                         managementMenu = false;
-                                    } catch (Exception e) {
-                                        JOptionPane.showMessageDialog(null, "Une erreur s'est produite lors de l'ajout du livre.", "Erreur", JOptionPane.ERROR_MESSAGE);
-                                    }
                                     break;
                                 }
                                 case 2: {
@@ -126,13 +146,28 @@ public class Main {
                                     """
                                             ******* Menu *******\s
                                             1 : Emprunter pour l-un client deja existant\s
-                                            2 : Ajouter un nouveau client\s""");
+                                            2 : Ajouter un nouveau client""");
 
                             int borrowChoice = Integer.parseInt(borrowMenu);
                             switch (borrowChoice){
-
+                                case 1 : {
+                                    Client.Display();
+                                    Emprunt.borrowBook();
+                                    break;
+                                }
+                                case 2 : {
+                                    break;
+                                }
                             }
                         }
+                    }
+                    case 5 : {
+                        Emprunt.retunBook();
+                        break;
+                    }
+                    case 6 : {
+                        generateStatistics();
+                        break;
                     }
                     default:
                         System.out.println("Choix indisponible");
@@ -140,6 +175,37 @@ public class Main {
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(null, "Veuillez entrer un nombre valide.", "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
             }
+        }
+    }
+
+    public static void generateStatistics(){
+        try {
+            Map<String, Integer> bookCounts = getTotalBookCounts();
+            int disponibleCount = bookCounts.getOrDefault("disponibles", 0);
+            int indisponibleCount = bookCounts.getOrDefault("indisponibles",0);
+            int perdusCount = bookCounts.getOrDefault("perdus", 0);
+            int borrowed = Emprunt.BorrowingStatistics();
+            int totalBooks = Book.Totalbooks();
+
+            BufferedWriter writer = new BufferedWriter(new FileWriter("Statistiques.txt"));
+
+            writer.write("*****************  les statistiques de votre bibliotheque  *****************\n\n");
+            writer.newLine();
+            writer.write("Total des livres dans la bibliothèque: " + totalBooks);
+            writer.newLine();
+            writer.write("Livres disponibles: " + disponibleCount);
+            writer.newLine();
+            writer.write("Livres indisponibles: " + indisponibleCount);
+            writer.newLine();
+            writer.write("Livres perdus : " + perdusCount);
+            writer.newLine();
+            writer.write("Livres empruntés: " + borrowed);
+
+            writer.close();
+
+            JOptionPane.showMessageDialog(null,"Votre fichier des statistiques est généré par succes. (Statistiques.txt)");
+        }catch (IOException e){
+            throw new RuntimeException(e);
         }
     }
 }
