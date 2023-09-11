@@ -4,9 +4,7 @@ import javax.swing.*;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import static com.library.Book.getTotalBookCounts;
 
@@ -113,7 +111,7 @@ public class Main {
                                     """
                                             ******* Menu *******\s
                                             1 : Recherche par titre du livre\s
-                                            2 : recherche par auteur\s """);
+                                            2 : recherche par auteur""");
 
                             int researchChoice = Integer.parseInt(subMenu);
 
@@ -125,6 +123,7 @@ public class Main {
                                     }catch (Exception e){
                                         throw new RuntimeException(e);
                                     }
+                                    researchMenu = false;
                                     break;
                                 }
                                 case 2: {
@@ -134,6 +133,8 @@ public class Main {
                                     }catch (Exception e){
                                         throw new RuntimeException(e);
                                     }
+                                    researchMenu = false;
+                                    break;
                                 }
                             }
                         }
@@ -153,9 +154,11 @@ public class Main {
                                 case 1 : {
                                     Client.Display();
                                     Emprunt.borrowBook();
+                                    brwMenu = false;
                                     break;
                                 }
                                 case 2 : {
+                                    Client.AddClient();
                                     break;
                                 }
                             }
