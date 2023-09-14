@@ -1,8 +1,7 @@
 *****************  les statistiques de votre bibliotheque  *****************
 
 
-Total des livres dans la bibliothèque: 144
-Livres disponibles: 144
+Livres disponibles: 139
 Livres indisponibles: 3
-Livres perdus : 0
+Livres perdus : 2
 Livres empruntés: 1

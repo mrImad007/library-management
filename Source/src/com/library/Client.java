@@ -58,6 +58,34 @@ public class Client {
         }
     }
 
+    public static void deleteClient(){
+        String membership = null;
+        int idClient = -1;
+        try{
+            while(membership == null || membership.trim().isEmpty()){
+                membership = JOptionPane.showInputDialog(null,"Entrer le membership du client : ");
+            }
+            ResultSet resultSet = checkMembership(membership);
+
+            while (resultSet.next()){
+                idClient = resultSet.getInt(1);
+            }
+
+            if (idClient>0){
+                String query = "DELETE FROM `client` WHERE `membership` = ?";
+                PreparedStatement preparedStatement = connection.prepareStatement(query);
+                preparedStatement.setString(1,membership);
+                preparedStatement.executeUpdate();
+
+                JOptionPane.showMessageDialog(null,"Client supprimé");
+            }else {
+                JOptionPane.showMessageDialog(null,"Ce client n'existe pas","error",JOptionPane.ERROR_MESSAGE);
+            }
+        }catch (Exception e){
+            throw new RuntimeException(e);
+        }
+    }
+
     public static void Display(){
         try {
             StringBuilder output = new StringBuilder();

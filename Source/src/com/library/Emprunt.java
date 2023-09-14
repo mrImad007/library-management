@@ -42,7 +42,7 @@ public class Emprunt {
                 }
             }
 
-            Boolean available = Book.doesBookExist(isbn);
+            boolean available = Book.doesBookExist(isbn);
 
             if (available){
                 while (period  <= 0) {
@@ -141,7 +141,7 @@ public class Emprunt {
         int idClient = 0;
         String membership = null;
         try {
-            while (membership == null){
+            while (membership == null || membership.trim().isEmpty()){
                 membership = JOptionPane.showInputDialog("Entrer le membership du client");
             }
             ResultSet client = Client.checkMembership(membership);
@@ -170,8 +170,8 @@ public class Emprunt {
             preparedStatement.setInt(1, id);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
-                    int bookCount = resultSet.getInt(1);
-                    return bookCount > 0;
+                    int clientCount = resultSet.getInt(1);
+                    return clientCount > 0;
                 }
             }
         }
@@ -193,6 +193,8 @@ public class Emprunt {
             throw new RuntimeException(e);
         }
     }
+
+
 
 
 }

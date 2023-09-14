@@ -11,9 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Book {
-    private static ResultSet result = null;
     private static final Logger logger = Logger.getLogger(Book.class.getName());
-    private static final Statement statement = null;
     private static final Connection connection = JDBC.main();
     private static StringBuilder output = new StringBuilder();
 
@@ -46,6 +44,41 @@ public class Book {
                 JOptionPane.showMessageDialog(null, output.toString(), "List des livres disponible", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 JOptionPane.showMessageDialog(null, "Aucun livre n'est disponible", "Book List", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Query failed");
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void displayIndisponible() {
+        try {
+            String dispo = "indisponible";
+            output = new StringBuilder();
+
+            String sql = "SELECT * FROM `book` WHERE `status` = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setString(1, dispo);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+            output.append("ISBN\t\t\t\t\tTitre\t\t\t\t\tAuteur\t\t\tQuantité\n");
+
+            while (resultSet.next()) {
+                String isbn = resultSet.getString(1);
+                String name = resultSet.getString(2);
+                String author = resultSet.getString(3);
+                int quantity = resultSet.getInt(4);
+
+                output.append(isbn).append("   ").append("\t\t\t\t\t");
+                output.append(name).append("   ").append("\t\t\t\t\t");
+                output.append(author).append("   ").append("\t\t\t");
+                output.append(quantity).append("   ").append("\n");
+            }
+
+            if (output.length() > 0) {
+                JOptionPane.showMessageDialog(null, output.toString(), "List des livres indisponible", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null, "Aucun livre n'est indisponible", "Book List", JOptionPane.INFORMATION_MESSAGE);
             }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Query failed");
@@ -214,27 +247,6 @@ public class Book {
         }
     }
 
-    /*public static void UpdateBook(){
-        System.out.println("Enter the isbn : ");
-        int isbn = scanner.nextInt();
-        System.out.println("Enter the name: ");
-        String name = scanner.next();
-        System.out.println("Enter the author: ");
-        String author = scanner.next();
-        System.out.println("Enter the quantity : ");
-        int quantity = scanner.nextInt();
-        System.out.println("Enter the status: ");
-        String status = scanner.next();
-
-        try{
-            String sql = "UPDATE book SET name = '" + name + "', author = '" + author + "', quantity = '" + quantity + "', status = '" + status + "' WHERE isbn = " + isbn;
-            statement.executeUpdate(sql);
-        } catch (SQLException e) {
-            logger.log(Level.WARNING,"failed");
-            throw new RuntimeException(e);
-        }
-    }*/
-
     public static void UpdateBook() {
         try {
             String isbnInput = JOptionPane.showInputDialog("Enter the ISBN:");
@@ -244,13 +256,13 @@ public class Book {
                 isbn = Integer.parseInt(isbnInput);
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(null, "Invalid ISBN. Please enter a valid number.", "Error", JOptionPane.ERROR_MESSAGE);
-                return; // Exit the method if ISBN is invalid
+                return;
             }
 
             String name = null;
             String author = null;
             int quantity = -1;
-            String status = null;
+            String status;
 
             while (name == null || name.trim().isEmpty()) {
                 name = JOptionPane.showInputDialog("Enter the name:");
@@ -260,21 +272,20 @@ public class Book {
                 author = JOptionPane.showInputDialog("Enter the author:");
             }
 
-            while (quantity <= 0) {
+            while (quantity < 0) {
                 try {
                     String quantityInput = JOptionPane.showInputDialog("Enter the quantity:");
                     quantity = Integer.parseInt(quantityInput);
 
-                    if (quantity <= 0) {
-                        JOptionPane.showMessageDialog(null, "Quantity must be greater than zero.", "Error", JOptionPane.ERROR_MESSAGE);
-                    }
                 } catch (NumberFormatException e) {
                     JOptionPane.showMessageDialog(null, "Invalid quantity. Please enter a valid number.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
 
-            while (status == null || status.trim().isEmpty()) {
-                status = JOptionPane.showInputDialog("Enter the status:");
+            if (quantity == 0){
+                status = "indisponible";
+            }else{
+                status = "disponible";
             }
 
             String sql = "UPDATE book SET name = ?, author = ?, quantity = ?, status = ? WHERE isbn = ?";
@@ -332,7 +343,7 @@ public class Book {
                     bookCounts.put("indisponibles", indiponibleCount);
                 }
 
-                String perdusQuery = "SELECT COUNT(*) AS total_perdu FROM book WHERE status = 'perdu'";
+                String perdusQuery = "SELECT COUNT(lost_quantity) AS total_perdu FROM book WHERE lost_quantity>0 ";
                 PreparedStatement perdusStatement = connection.prepareStatement(perdusQuery);
                 ResultSet perdusResultSet = perdusStatement.executeQuery();
 
@@ -345,6 +356,53 @@ public class Book {
 
             } catch (Exception e) {
                 throw new RuntimeException(e);
+            }
+        }catch (Exception e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void markLost(){
+        try {
+            int isbn = -1;
+            int count = 0;
+
+            while(isbn < 0){
+                try {
+                    isbn = Integer.parseInt(JOptionPane.showInputDialog("Veuillez enter l'isbn du livre perdu':"));
+
+                    if (isbn <= 0) {
+                        JOptionPane.showMessageDialog(null, "Isbn invalide", "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(null, "Veuillez entrer un isbn valide.", "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+
+            String checkingQuery = "SELECT quantity AS qtt FROM `book` WHERE `isbn` = ?";
+            PreparedStatement checkingStatement = connection.prepareStatement(checkingQuery);
+            checkingStatement.setInt(1,isbn);
+            ResultSet resultSet = checkingStatement.executeQuery();
+            while (resultSet.next()){
+                count = resultSet.getInt("qtt");
+            }
+
+            if(count>1){
+                String deleteQuery = "UPDATE `book` SET `quantity` = quantity-1, `lost_quantity` = lost_quantity+1 WHERE isbn = ?";
+                PreparedStatement preparedStatement = connection.prepareStatement(deleteQuery);
+                preparedStatement.setInt(1,isbn);
+                preparedStatement.executeUpdate();
+                JOptionPane.showMessageDialog(null,"Une copie est bien soustracté du livre");
+            }else if (count == 1){
+                String status = "perdu";
+                String lostQuery = "UPDATE `book` SET `status` = ?, `quantity` = quantity-1 , `lost_quantity` = lost_quantity+1 WHERE isbn = ?";
+                PreparedStatement preparedStatement = connection.prepareStatement(lostQuery);
+                preparedStatement.setString(1,status);
+                preparedStatement.setInt(2,isbn);
+                preparedStatement.executeUpdate();
+                JOptionPane.showMessageDialog(null,"Ce livre est marqué comme `PERDU`");
+            }else{
+                JOptionPane.showMessageDialog(null,"Ce livre est indisponible ou n'existe pas", "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
             }
         }catch (Exception e){
             throw new RuntimeException(e);
