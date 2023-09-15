@@ -8,14 +8,12 @@ import java.sql.*;
 public class Bibliothequaire {
     private static final Connection connection = JDBC.main();
 
-
     public static ResultSet checkUsership (String usership) throws SQLException {
         String query = "SELECT id FROM bibliothequaire WHERE `usership` = ? ";
         PreparedStatement preparedStatement = connection.prepareStatement(query);
         preparedStatement.setString(1,usership);
-        ResultSet resultIdLib = preparedStatement.executeQuery();
 
-        return resultIdLib;
+        return preparedStatement.executeQuery();
     }
 
     public static boolean authentification(){

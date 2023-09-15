@@ -208,6 +208,8 @@ public class Book {
 
     public static void DeleteBook() {
         int isbn = -1;
+        int qtt = -1;
+        ResultSet resultSet;
 
         while (isbn == -1) {
             try {
@@ -216,11 +218,50 @@ public class Book {
                 String checkSql = "SELECT * FROM book WHERE isbn = ?";
                 PreparedStatement checkStatement = connection.prepareStatement(checkSql);
                 checkStatement.setInt(1, isbn);
-                ResultSet resultSet = checkStatement.executeQuery();
+                resultSet = checkStatement.executeQuery();
 
                 if (!resultSet.next()) {
                     JOptionPane.showMessageDialog(null, "Book not found", "Invalid Input", JOptionPane.ERROR_MESSAGE);
                     isbn = -1;
+                } else {
+                    boolean check = Emprunt.checkBook(isbn);
+                    if (!check){
+
+                        String checkingQuery = "SELECT quantity AS qtt FROM `book` WHERE `isbn` = ?";
+                        PreparedStatement checkingStatement = connection.prepareStatement(checkingQuery);
+                        checkingStatement.setInt(1, isbn);
+                        ResultSet result = checkingStatement.executeQuery();
+
+                        while (result.next()) {
+                            qtt = result.getInt("qtt");
+                        }
+
+                        if (qtt > 1) {
+                            String deleteSql = "UPDATE `book` SET quantity = quantity-1 WHERE isbn = ?";
+                            PreparedStatement deleteStatement = connection.prepareStatement(deleteSql);
+                            deleteStatement.setInt(1, isbn);
+                            int deletedRows = deleteStatement.executeUpdate();
+
+                            if (deletedRows > 0) {
+                                JOptionPane.showMessageDialog(null, "Book deleted successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Book not found", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+                            }
+                        } else {
+                            String deleteSql = "DELETE FROM book WHERE isbn = ?";
+                            PreparedStatement deleteStatement = connection.prepareStatement(deleteSql);
+                            deleteStatement.setInt(1, isbn);
+                            int deletedRows = deleteStatement.executeUpdate();
+
+                            if (deletedRows > 0) {
+                                JOptionPane.showMessageDialog(null, "Book deleted successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Book not found", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+                            }
+                        }
+                    }else {
+                        JOptionPane.showMessageDialog(null,"Ce livre est deja emprunté, suppression impossible","error",JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(null, "Please enter a valid integer.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
@@ -228,22 +269,6 @@ public class Book {
                 logger.log(Level.WARNING, "Query failed", e);
                 JOptionPane.showMessageDialog(null, "An error occurred while checking the book.", "Error", JOptionPane.ERROR_MESSAGE);
             }
-        }
-
-        try {
-            String deleteSql = "DELETE FROM book WHERE isbn = ?";
-            PreparedStatement deleteStatement = connection.prepareStatement(deleteSql);
-            deleteStatement.setInt(1, isbn);
-            int deletedRows = deleteStatement.executeUpdate();
-
-            if (deletedRows > 0) {
-                JOptionPane.showMessageDialog(null, "Book deleted successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(null, "Book not found", "Invalid Input", JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (SQLException e) {
-            logger.log(Level.WARNING, "Delete failed", e);
-            JOptionPane.showMessageDialog(null, "An error occurred while deleting the book.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -302,22 +327,6 @@ public class Book {
         } catch (SQLException e) {
             logger.log(Level.WARNING, "Update failed", e);
             JOptionPane.showMessageDialog(null, "An error occurred while updating the book.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    public static int Totalbooks(){
-        try {
-            int totalQuantity = 0;
-            String query = "SELECT SUM(quantity) AS total_quantity FROM book";
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            ResultSet resultSet = preparedStatement.executeQuery();
-
-            if (resultSet.next()) {
-                totalQuantity = resultSet.getInt("total_quantity");
-            }
-            return totalQuantity;
-        }catch (Exception e){
-            throw new RuntimeException(e);
         }
     }
 
@@ -386,7 +395,7 @@ public class Book {
             while (resultSet.next()){
                 count = resultSet.getInt("qtt");
             }
-
+            System.out.println(count);
             if(count>1){
                 String deleteQuery = "UPDATE `book` SET `quantity` = quantity-1, `lost_quantity` = lost_quantity+1 WHERE isbn = ?";
                 PreparedStatement preparedStatement = connection.prepareStatement(deleteQuery);

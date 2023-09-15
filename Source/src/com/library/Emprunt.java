@@ -71,7 +71,6 @@ public class Emprunt {
 
                 if (idClient>0 && idLib>0){
                     boolean check = Emprunt.checkIfClientExists(idClient);
-                    System.out.println(check);
                     if (!check){
                         String InsertQuery = "INSERT INTO" +
                                 " `emprunt` (`isbn_book`, `client_id`, `bibliothequaire_id`, `pickup_date`, `return_date`, `period`)" +
@@ -194,7 +193,26 @@ public class Emprunt {
         }
     }
 
+    public static boolean checkBook(int isbn){
+        try {
+            int bookId = 0;
+            String query = "SELECT * FROM `emprunt` WHERE isbn_book = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setInt(1,isbn);
+            ResultSet resultSet = preparedStatement.executeQuery();
 
+            while (resultSet.next()){
+                bookId = resultSet.getInt(1);
+            }
+            if (bookId > 0){
+                return true;
+            }else{
+                return false;
+            }
+        }catch (Exception e){
+            throw new RuntimeException(e);
+        }
+    }
 
 
 }

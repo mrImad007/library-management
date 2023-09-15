@@ -24,8 +24,9 @@ public class Main {
                     2 : Gestion de la bibliotheque\s
                     3 : Trouver un livre \s
                     4 : Emprunter un livre\s
-                    5 : Retourner un livre
-                    6 : Générer des rapports statiques
+                    5 : Retourner un livre\s
+                    6 : Générer des rapports statiques\s
+                    7 : Supprimer un client\s
                     0 : Quitter""");
 
             try {
@@ -42,8 +43,7 @@ public class Main {
                                 ******* Menu *******\s
                                 1 : Livres disponibles\s
                                 2 : Livres indisponibles
-                                3 : Livres empruntés\s
-                                4 : Livres perdus \s""");
+                                3 : Livres empruntés\s""");
                         int choiceShowMenu = Integer.parseInt(showMenu);
 
                         switch (choiceShowMenu){
@@ -196,6 +196,10 @@ public class Main {
                     }
                     case 6 : {
                         generateStatistics();
+                        break;
+                    }
+                    case 7 : {
+                        Client.deleteClient();
                         break;
                     }
                     default:

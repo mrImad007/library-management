@@ -9,8 +9,7 @@ public class JDBC {
     public static Connection main() {
 
         try {
-            Connection connection = DriverManager.getConnection(URL,ROOT,PASSWORD);
-            return connection;
+            return DriverManager.getConnection(URL,ROOT,PASSWORD);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
